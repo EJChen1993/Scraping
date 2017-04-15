@@ -1,10 +1,11 @@
-#import article
 import re, codecs
+import pandas as pd
+import numpy as np
+import operator
+
+#import article
 with open("/Users/yichiehchen/python file/text mining/PA-2/TMBD_news_files_2000.txt") as f:
     raw_article = f.readlines() 
-
-#print(raw_article)
-
 article = []
 for i in raw_article:
     i = i[:-1] #remove \n
@@ -16,24 +17,17 @@ for i in raw_article:
         for j in i:
             if j == "\u3000":
                 i.remove(j)
-            
-#print(article[0:3])  
 
 #import stopword & punctuation
 with open("/Users/yichiehchen/python file/text mining/PA-2/punctuation.txt") as p:
     raw_pun = p.readlines()
-#print(raw_pun)
-
 #remove \n
 pun = []
 for i in raw_pun:
     i = i[0]
     pun.append(i)
-
 with open("/Users/yichiehchen/python file/text mining/PA-2/stopword_chinese.txt") as s:
     raw_stopword = s.readlines()
-#print(raw_stopword)
-
 #remove \n
 stopword = []
 for i in raw_stopword:
@@ -46,14 +40,10 @@ for i in article:
     article_1 = list(filter(lambda x: x not in pun, i))
     article_2 = list(filter(lambda y: y not in stopword, article_1))
     final_article.append(article_2)
-    
 print(final_article[0]) 
-#print(final_article[1])
-#print(len(final_article))
 
 #caculate TF in each document {no.: {term:TF...}}
 each_doc = {}
-
 for i in range(1, 2001):
     each_doc[i] = {}
     for j in final_article[i-1]:
@@ -65,7 +55,6 @@ print(each_doc[1])
 
 #build term dictionary {term:[TF,DF]...}
 term_dict = {}
-
 for i in list(each_doc.keys()):
     for j in list(each_doc[i].keys()):
         if j not in list(term_dict.keys()):
@@ -73,13 +62,10 @@ for i in list(each_doc.keys()):
             term_dict[j][0] += each_doc[i][j]
         else:
             term_dict[j][0] += each_doc[i][j]
-            term_dict[j][1] += 1
-            
+            term_dict[j][1] += 1            
 print(term_dict)  
 
 #transform term_dict into dataframe & calculate IDF, WEIGHT
-import pandas as pd
-import numpy as np
 term_frame = pd.DataFrame(term_dict).T
 term_frame.columns = ['TF', 'DF']
 term_frame['IDF'] = np.log10(2000/term_frame['DF'])
@@ -109,24 +95,15 @@ for i in range(1, 2001):
     a = sum(final_frame['vector_doc56'] * final_frame[comparison])
     b = (sum((final_frame['vector_doc56'] ** 2)) ** 0.5) * (sum((final_frame[comparison] ** 2)) ** 0.5)
     sim[i] = a/b
-print(sim)
-import operator
 sorted_sim = sorted(sim.items(), key=operator.itemgetter(1), reverse=True)
-
-print(sorted_sim[1:12])
 result_sim = sorted_sim[1:12]
 
 #export sorted_sim into txt file
 final_sim = ["Result Format\n" + "ID Similarity\n"]
-
 for i in result_sim:
     i = str(i[0]) + " " + str(i[1]) + "\n"
-    final_sim.append(i)
-    
-print(final_sim)
-
+    final_sim.append(i)   
 file = open("result_sim.txt", "w", encoding = "UTF-8")
-
 for i in final_sim:
     file.write(str(i))   
 file.close()      
